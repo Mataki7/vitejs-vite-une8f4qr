@@ -1,4 +1,4 @@
-// fix
+// fix2
 import { supabase } from './supabase';
 import keksPostojeci from './keks.json';
 import { useEffect, useMemo, useState } from 'react';
