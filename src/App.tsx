@@ -126,27 +126,6 @@ export default function App() {
     }
   };
 
-  const uploadInitialData = async () => {
-    const formatted = (trgovci as Trgovac[]).map((item) => ({
-      naziv: item.Naziv,
-      oib: item.OIB,
-      mb: item.MB,
-      adresa: item.Adresa,
-      grad: extractCity(item.Adresa),
-      vrsta_subjekta: item['Vrsta subjekta'],
-    }));
-
-    const { error } = await supabase.from('trgovci').insert(formatted);
-
-    if (error) {
-      console.error(error);
-      alert('Greška kod uploada trgovaca.');
-    } else {
-      alert('Trgovci uploadani u Supabase!');
-      loadTrgovci();
-    }
-  };
-
   const extractCity = (adresa: string) => {
     const parts = adresa.split(',');
     return parts[parts.length - 1]?.trim() || '';
@@ -728,3 +707,4 @@ function DashboardCard({ title, value }: { title: string; value: number }) {
     </div>
   );
 }
+
