@@ -1,3 +1,4 @@
+// fix
 import { supabase } from './supabase';
 import keksPostojeci from './keks.json';
 import { useEffect, useMemo, useState } from 'react';
@@ -707,5 +708,6 @@ function DashboardCard({ title, value }: { title: string; value: number }) {
     </div>
   );
 }
+
 
 
