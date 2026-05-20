@@ -2,7 +2,6 @@
 import { supabase } from './supabase';
 import keksPostojeci from './keks.json';
 import { useEffect, useMemo, useState } from 'react';
-import trgovci from './trgovci.json';
 import './App.css';
 
 type Trgovac = {
