@@ -1,6 +1,5 @@
 // fix3
 import { supabase } from './supabase';
-import keksPostojeci from './keks.json';
 import { useEffect, useMemo, useState } from 'react';
 import './App.css';
 
@@ -35,13 +34,8 @@ export default function App() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [data, setData] = useState<Trgovac[]>([]);
 
-  const postojeciOIBSet = useMemo(() => {
-    const arr = (keksPostojeci as { OIB: string }[])
-      .map((item) => String(item.OIB).trim())
-      .filter((oib) => /^\d{11}$/.test(oib));
-
-    return new Set(arr);
-  }, []);
+  const postojeciOIBSet = useMemo(() =>
+  new Set<string>(), []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
