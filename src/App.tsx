@@ -1,4 +1,4 @@
-// fix3
+// fix4
 import { supabase } from './supabase';
 import { useEffect, useMemo, useState } from 'react';
 import './App.css';
@@ -29,18 +29,17 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [cityFilter, setCityFilter] = useState('');
   const [vrstaFilter, setVrstaFilter] = useState('');
+
   const [statuses, setStatuses] = useState<Record<string, LeadStatus>>({});
   const [priorities, setPriorities] = useState<Record<string, Prioritet>>({});
   const [data, setData] = useState<Trgovac[]>([]);
 
-const [brojObjekata, setBrojObjekata] = useState<Record<string, string>>({});
-const [brojObjekataCustom, setBrojObjekataCustom] = useState<Record<string, string>>({});
+  const [brojObjekata, setBrojObjekata] = useState<Record<string, string>>({});
+  const [brojObjekataCustom, setBrojObjekataCustom] = useState<Record<string, string>>({});
+  const [vrstaBlagajne, setVrstaBlagajne] = useState<Record<string, string>>({});
+  const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, string>>({});
 
-const [vrstaBlagajne, setVrstaBlagajne] = useState<Record<string, string>>({});
-const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, string>>({});
-
-  const postojeciOIBSet = useMemo(() =>
-  new Set<string>(), []);
+  const postojeciOIBSet = useMemo(() => new Set<string>(), []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -48,11 +47,9 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
       setAuthLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      }
-    );
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
 
     return () => {
       listener.subscription.unsubscribe();
@@ -68,11 +65,9 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
   useEffect(() => {
     const savedStatuses = localStorage.getItem('keks-statuses');
     const savedPriorities = localStorage.getItem('keks-priorities');
-    if (savedNotes) setNotes(JSON.parse(savedNotes));
 
     if (savedStatuses) setStatuses(JSON.parse(savedStatuses));
     if (savedPriorities) setPriorities(JSON.parse(savedPriorities));
-    if (savedNotes) setNotes(JSON.parse(savedNotes));
   }, []);
 
   useEffect(() => {
@@ -82,7 +77,6 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
   useEffect(() => {
     localStorage.setItem('keks-priorities', JSON.stringify(priorities));
   }, [priorities]);
-
 
   const login = async () => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -110,15 +104,45 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
     }
 
     if (data) {
-      setData(
-        data.map((item: any) => ({
-          Naziv: item.naziv || '',
-          OIB: item.oib || '',
-          MB: item.mb || '',
-          Adresa: item.adresa || '',
-          'Vrsta subjekta': item.vrsta_subjekta || '',
-        }))
-      );
+      const mappedData = data.map((item: any) => ({
+        Naziv: item.naziv || '',
+        OIB: item.oib || '',
+        MB: item.mb || '',
+        Adresa: item.adresa || '',
+        'Vrsta subjekta': item.vrsta_subjekta || '',
+      }));
+
+      setData(mappedData);
+
+      const brojMap: Record<string, string> = {};
+      const brojCustomMap: Record<string, string> = {};
+      const blagajnaMap: Record<string, string> = {};
+      const blagajnaCustomMap: Record<string, string> = {};
+
+      data.forEach((item: any) => {
+        const oib = item.oib || '';
+        brojMap[oib] = item.broj_objekata || '';
+        brojCustomMap[oib] = item.broj_objekata_custom || '';
+        blagajnaMap[oib] = item.vrsta_blagajne || '';
+        blagajnaCustomMap[oib] = item.vrsta_blagajne_custom || '';
+      });
+
+      setBrojObjekata(brojMap);
+      setBrojObjekataCustom(brojCustomMap);
+      setVrstaBlagajne(blagajnaMap);
+      setVrstaBlagajneCustom(blagajnaCustomMap);
+    }
+  };
+
+  const updateTrgovac = async (oib: string, field: string, value: string) => {
+    const { error } = await supabase
+      .from('trgovci')
+      .update({ [field]: value })
+      .eq('oib', oib);
+
+    if (error) {
+      console.error(error);
+      alert('Greška kod spremanja podatka.');
     }
   };
 
@@ -148,14 +172,10 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
         `${item.Naziv} ${item.OIB} ${item.MB} ${item.Adresa} ${item['Vrsta subjekta']}`.toLowerCase();
 
       const matchesSearch = haystack.includes(search.toLowerCase());
-      const matchesCity =
-        !cityFilter || extractCity(item.Adresa) === cityFilter;
-      const matchesVrsta =
-        !vrstaFilter || item['Vrsta subjekta'] === vrstaFilter;
+      const matchesCity = !cityFilter || extractCity(item.Adresa) === cityFilter;
+      const matchesVrsta = !vrstaFilter || item['Vrsta subjekta'] === vrstaFilter;
 
-      return (
-        matchesSearch && matchesCity && matchesVrsta && !isExistingKeksMerchant
-      );
+      return matchesSearch && matchesCity && matchesVrsta && !isExistingKeksMerchant;
     });
   }, [data, search, cityFilter, vrstaFilter, postojeciOIBSet]);
 
@@ -163,8 +183,7 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
     return {
       total: filtered.length,
       nijeKontaktiran: filtered.filter(
-        (item) =>
-          (statuses[item.OIB] || 'Nije kontaktiran') === 'Nije kontaktiran'
+        (item) => (statuses[item.OIB] || 'Nije kontaktiran') === 'Nije kontaktiran'
       ).length,
       kontaktiran: filtered.filter(
         (item) => (statuses[item.OIB] || 'Nije kontaktiran') === 'Kontaktiran'
@@ -202,7 +221,6 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
   const setPriority = (oib: string, value: Prioritet) => {
     setPriorities((prev) => ({ ...prev, [oib]: value }));
   };
-
 
   if (authLoading) {
     return <div style={{ padding: 40 }}>Učitavanje...</div>;
@@ -343,14 +361,7 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
           KEKS Pay
         </h1>
 
-        <p
-          style={{
-            marginTop: 0,
-            color: '#4f6b57',
-            marginBottom: 24,
-            fontSize: 17,
-          }}
-        >
+        <p style={{ marginTop: 0, color: '#4f6b57', marginBottom: 24, fontSize: 17 }}>
           Pregled leadova - godišnji promet veći od 900.000 €
         </p>
 
@@ -363,17 +374,11 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
           }}
         >
           <DashboardCard title="Ukupno" value={dashboard.total} />
-          <DashboardCard
-            title="Nije kontaktiran"
-            value={dashboard.nijeKontaktiran}
-          />
+          <DashboardCard title="Nije kontaktiran" value={dashboard.nijeKontaktiran} />
           <DashboardCard title="Kontaktiran" value={dashboard.kontaktiran} />
           <DashboardCard title="U tijeku" value={dashboard.uTijeku} />
           <DashboardCard title="Ugovoren" value={dashboard.ugovoren} />
-          <DashboardCard
-            title="Visok prioritet"
-            value={dashboard.visokPrioritet}
-          />
+          <DashboardCard title="Visok prioritet" value={dashboard.visokPrioritet} />
         </div>
 
         <div
@@ -501,7 +506,6 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
           {filtered.slice(0, 200).map((item, index) => {
             const currentStatus = statuses[item.OIB] || 'Nije kontaktiran';
             const currentPriority = priorities[item.OIB] || 'Srednji';
-        
 
             return (
               <div
@@ -580,20 +584,12 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
                   }}
                 >
                   <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontWeight: 700,
-                        marginBottom: 6,
-                      }}
-                    >
+                    <label style={{ display: 'block', fontWeight: 700, marginBottom: 6 }}>
                       Status lead-a
                     </label>
                     <select
                       value={currentStatus}
-                      onChange={(e) =>
-                        setStatus(item.OIB, e.target.value as LeadStatus)
-                      }
+                      onChange={(e) => setStatus(item.OIB, e.target.value as LeadStatus)}
                       style={{
                         width: '100%',
                         padding: '10px',
@@ -611,20 +607,12 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
                   </div>
 
                   <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontWeight: 700,
-                        marginBottom: 6,
-                      }}
-                    >
+                    <label style={{ display: 'block', fontWeight: 700, marginBottom: 6 }}>
                       Prioritet
                     </label>
                     <select
                       value={currentPriority}
-                      onChange={(e) =>
-                        setPriority(item.OIB, e.target.value as Prioritet)
-                      }
+                      onChange={(e) => setPriority(item.OIB, e.target.value as Prioritet)}
                       style={{
                         width: '100%',
                         padding: '10px',
@@ -640,107 +628,116 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
                   </div>
                 </div>
 
-<div style={{ marginTop: 16 }}>
-  <label style={{ fontWeight: 600 }}>
-    Broj ugostiteljskih objekata
-  </label>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: 12,
+                    marginTop: 16,
+                  }}
+                >
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 700, marginBottom: 6 }}>
+                      Broj ugostiteljskih objekata
+                    </label>
 
-  <select
-    value={brojObjekata[item.oib] || ''}
-    onChange={(e) =>
-      setBrojObjekata({
-        ...brojObjekata,
-        [item.oib]: e.target.value,
-      })
-    }
-    style={{
-      width: '100%',
-      padding: 10,
-      marginTop: 6,
-      borderRadius: 8,
-    }}
-  >
-    <option value="">Odaberi</option>
-    <option value="1">1</option>
-    <option value="2">2</option>
-    <option value="3">3</option>
-    <option value="4">4</option>
-    <option value="5+">5 ili više</option>
-  </select>
+                    <select
+                      value={brojObjekata[item.OIB] || ''}
+                      onChange={async (e) => {
+                        const value = e.target.value;
+                        setBrojObjekata((prev) => ({ ...prev, [item.OIB]: value }));
+                        await updateTrgovac(item.OIB, 'broj_objekata', value);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: 10,
+                        borderRadius: 8,
+                        border: '1px solid #ccc',
+                        background: '#fff',
+                      }}
+                    >
+                      <option value="">Odaberi</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5+">5 ili više</option>
+                    </select>
 
-  {brojObjekata[item.oib] === '5+' && (
-    <input
-      type="number"
-      placeholder="Upiši broj objekata"
-      value={brojObjekataCustom[item.oib] || ''}
-      onChange={(e) =>
-        setBrojObjekataCustom({
-          ...brojObjekataCustom,
-          [item.oib]: e.target.value,
-        })
-      }
-      style={{
-        width: '100%',
-        padding: 10,
-        marginTop: 8,
-        borderRadius: 8,
-      }}
-    />
-  )}
-</div>
+                    {brojObjekata[item.OIB] === '5+' && (
+                      <input
+                        type="number"
+                        placeholder="Upiši broj objekata"
+                        value={brojObjekataCustom[item.OIB] || ''}
+                        onChange={async (e) => {
+                          const value = e.target.value;
+                          setBrojObjekataCustom((prev) => ({ ...prev, [item.OIB]: value }));
+                          await updateTrgovac(item.OIB, 'broj_objekata_custom', value);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: 10,
+                          marginTop: 8,
+                          borderRadius: 8,
+                          border: '1px solid #ccc',
+                        }}
+                      />
+                    )}
+                  </div>
 
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 700, marginBottom: 6 }}>
+                      Vrsta blagajne
+                    </label>
 
-                <div style={{ marginTop: 16 }}>
-  <label style={{ fontWeight: 600 }}>
-    Vrsta blagajne
-  </label>
+                    <select
+                      value={vrstaBlagajne[item.OIB] || ''}
+                      onChange={async (e) => {
+                        const value = e.target.value;
+                        setVrstaBlagajne((prev) => ({ ...prev, [item.OIB]: value }));
+                        await updateTrgovac(item.OIB, 'vrsta_blagajne', value);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: 10,
+                        borderRadius: 8,
+                        border: '1px solid #ccc',
+                        background: '#fff',
+                      }}
+                    >
+                      <option value="">Odaberi</option>
+                      <option value="Remaris">Remaris</option>
+                      <option value="SmartPos">SmartPos</option>
+                      <option value="Infopartner">Infopartner</option>
+                      <option value="WuGo">WuGo</option>
+                      <option value="Serv.Us">Serv.Us</option>
+                      <option value="Ostalo">Ostalo</option>
+                    </select>
 
-  <select
-    value={vrstaBlagajne[item.oib] || ''}
-    onChange={(e) =>
-      setVrstaBlagajne({
-        ...vrstaBlagajne,
-        [item.oib]: e.target.value,
-      })
-    }
-    style={{
-      width: '100%',
-      padding: 10,
-      marginTop: 6,
-      borderRadius: 8,
-    }}
-  >
-    <option value="">Odaberi</option>
-    <option value="Remaris">Remaris</option>
-    <option value="SmartPos">SmartPos</option>
-    <option value="Infopartner">Infopartner</option>
-    <option value="WuGo">WuGo</option>
-    <option value="Serv.Us">Serv.Us</option>
-    <option value="Ostalo">Ostalo</option>
-  </select>
-
-  {vrstaBlagajne[item.oib] === 'Ostalo' && (
-    <input
-      type="text"
-      placeholder="Upiši blagajnu"
-      value={vrstaBlagajneCustom[item.oib] || ''}
-      onChange={(e) =>
-        setVrstaBlagajneCustom({
-          ...vrstaBlagajneCustom,
-          [item.oib]: e.target.value,
-        })
-      }
-      style={{
-        width: '100%',
-        padding: 10,
-        marginTop: 8,
-        borderRadius: 8,
-      }}
-    />
-  )}
-</div>
-
-                
+                    {vrstaBlagajne[item.OIB] === 'Ostalo' && (
+                      <input
+                        type="text"
+                        placeholder="Upiši blagajnu"
+                        value={vrstaBlagajneCustom[item.OIB] || ''}
+                        onChange={async (e) => {
+                          const value = e.target.value;
+                          setVrstaBlagajneCustom((prev) => ({
+                            ...prev,
+                            [item.OIB]: value,
+                          }));
+                          await updateTrgovac(item.OIB, 'vrsta_blagajne_custom', value);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: 10,
+                          marginTop: 8,
+                          borderRadius: 8,
+                          border: '1px solid #ccc',
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -776,6 +773,3 @@ function DashboardCard({ title, value }: { title: string; value: number }) {
     </div>
   );
 }
-
-
-
