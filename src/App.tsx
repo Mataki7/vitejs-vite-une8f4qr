@@ -31,8 +31,13 @@ export default function App() {
   const [vrstaFilter, setVrstaFilter] = useState('');
   const [statuses, setStatuses] = useState<Record<string, LeadStatus>>({});
   const [priorities, setPriorities] = useState<Record<string, Prioritet>>({});
-  const [notes, setNotes] = useState<Record<string, string>>({});
   const [data, setData] = useState<Trgovac[]>([]);
+
+const [brojObjekata, setBrojObjekata] = useState<Record<string, string>>({});
+const [brojObjekataCustom, setBrojObjekataCustom] = useState<Record<string, string>>({});
+
+const [vrstaBlagajne, setVrstaBlagajne] = useState<Record<string, string>>({});
+const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, string>>({});
 
   const postojeciOIBSet = useMemo(() =>
   new Set<string>(), []);
@@ -63,7 +68,7 @@ export default function App() {
   useEffect(() => {
     const savedStatuses = localStorage.getItem('keks-statuses');
     const savedPriorities = localStorage.getItem('keks-priorities');
-    const savedNotes = localStorage.getItem('keks-notes');
+    if (savedNotes) setNotes(JSON.parse(savedNotes));
 
     if (savedStatuses) setStatuses(JSON.parse(savedStatuses));
     if (savedPriorities) setPriorities(JSON.parse(savedPriorities));
@@ -78,9 +83,6 @@ export default function App() {
     localStorage.setItem('keks-priorities', JSON.stringify(priorities));
   }, [priorities]);
 
-  useEffect(() => {
-    localStorage.setItem('keks-notes', JSON.stringify(notes));
-  }, [notes]);
 
   const login = async () => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -201,9 +203,6 @@ export default function App() {
     setPriorities((prev) => ({ ...prev, [oib]: value }));
   };
 
-  const setNote = (oib: string, value: string) => {
-    setNotes((prev) => ({ ...prev, [oib]: value }));
-  };
 
   if (authLoading) {
     return <div style={{ padding: 40 }}>Učitavanje...</div>;
@@ -502,7 +501,7 @@ export default function App() {
           {filtered.slice(0, 200).map((item, index) => {
             const currentStatus = statuses[item.OIB] || 'Nije kontaktiran';
             const currentPriority = priorities[item.OIB] || 'Srednji';
-            const currentNote = notes[item.OIB] || '';
+        
 
             return (
               <div
@@ -641,31 +640,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={{ marginTop: 16 }}>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontWeight: 700,
-                      marginBottom: 6,
-                    }}
-                  >
-                    Bilješke prodaje
-                  </label>
-                  <textarea
-                    value={currentNote}
-                    onChange={(e) => setNote(item.OIB, e.target.value)}
-                    placeholder="Upiši bilješku..."
-                    rows={4}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      borderRadius: 8,
-                      border: '1px solid #ccc',
-                      resize: 'vertical',
-                      fontFamily: 'Arial, sans-serif',
-                    }}
-                  />
-                </div>
+                
               </div>
             );
           })}
