@@ -640,6 +640,106 @@ const [vrstaBlagajneCustom, setVrstaBlagajneCustom] = useState<Record<string, st
                   </div>
                 </div>
 
+<div style={{ marginTop: 16 }}>
+  <label style={{ fontWeight: 600 }}>
+    Broj ugostiteljskih objekata
+  </label>
+
+  <select
+    value={brojObjekata[item.oib] || ''}
+    onChange={(e) =>
+      setBrojObjekata({
+        ...brojObjekata,
+        [item.oib]: e.target.value,
+      })
+    }
+    style={{
+      width: '100%',
+      padding: 10,
+      marginTop: 6,
+      borderRadius: 8,
+    }}
+  >
+    <option value="">Odaberi</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5+">5 ili više</option>
+  </select>
+
+  {brojObjekata[item.oib] === '5+' && (
+    <input
+      type="number"
+      placeholder="Upiši broj objekata"
+      value={brojObjekataCustom[item.oib] || ''}
+      onChange={(e) =>
+        setBrojObjekataCustom({
+          ...brojObjekataCustom,
+          [item.oib]: e.target.value,
+        })
+      }
+      style={{
+        width: '100%',
+        padding: 10,
+        marginTop: 8,
+        borderRadius: 8,
+      }}
+    />
+  )}
+</div>
+
+
+                <div style={{ marginTop: 16 }}>
+  <label style={{ fontWeight: 600 }}>
+    Vrsta blagajne
+  </label>
+
+  <select
+    value={vrstaBlagajne[item.oib] || ''}
+    onChange={(e) =>
+      setVrstaBlagajne({
+        ...vrstaBlagajne,
+        [item.oib]: e.target.value,
+      })
+    }
+    style={{
+      width: '100%',
+      padding: 10,
+      marginTop: 6,
+      borderRadius: 8,
+    }}
+  >
+    <option value="">Odaberi</option>
+    <option value="Remaris">Remaris</option>
+    <option value="SmartPos">SmartPos</option>
+    <option value="Infopartner">Infopartner</option>
+    <option value="WuGo">WuGo</option>
+    <option value="Serv.Us">Serv.Us</option>
+    <option value="Ostalo">Ostalo</option>
+  </select>
+
+  {vrstaBlagajne[item.oib] === 'Ostalo' && (
+    <input
+      type="text"
+      placeholder="Upiši blagajnu"
+      value={vrstaBlagajneCustom[item.oib] || ''}
+      onChange={(e) =>
+        setVrstaBlagajneCustom({
+          ...vrstaBlagajneCustom,
+          [item.oib]: e.target.value,
+        })
+      }
+      style={{
+        width: '100%',
+        padding: 10,
+        marginTop: 8,
+        borderRadius: 8,
+      }}
+    />
+  )}
+</div>
+
                 
               </div>
             );
